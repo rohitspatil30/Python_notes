@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="file"],
+        textarea,
+        button {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #answer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Chatbot</h1>
+        <form id="pdfForm" enctype="multipart/form-data">
+            <label for="pdfInput">Upload PDF:</label>
+            <input type="file" id="pdfInput" accept=".pdf" required>
+            <button type="submit">Submit</button>
+        </form>
+        <div id="pdfText" style="display: none;"></div>
+        <textarea id="userInput" rows="4" placeholder="Ask a question..."></textarea>
+        <button onclick="askQuestion()">Ask</button>
+        <div id="answer"></div>
+    </div>
+    <script>
+       async function extractTextFromPDF(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch('/', {
+        method: 'POST',
+        body: formData
+    });
+    const json = await response.json();
+    return json.text;
+}
+
+
+        async function askQuestion() {
+            const userInput = document.getElementById('userInput').value;
+            const pdfText = document.getElementById('pdfText').textContent;
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: userInput,
+                    context: pdfText
+                })
+            });
+            const answer = await response.text();
+            document.getElementById('answer').textContent = answer;
+        }
+
+        document.getElementById('pdfForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('pdfInput').files[0];
+            const pdfText = await extractTextFromPDF(file);
+            document.getElementById('pdfText').textContent = pdfText;
+        });
+    </script>
+</body>
+</html>
